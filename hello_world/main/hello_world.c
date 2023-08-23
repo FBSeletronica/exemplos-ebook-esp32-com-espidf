@@ -1,3 +1,10 @@
+/***************************************************************
+Exemplo: Hello World com ESP-IDF (ESP32)
+Descrição: Este exemplo pisca o LED da placa a cada 1 segundo e imprime
+uma mensagem na serial com o status do LED.
+Autor: Fábio Souza
+****************************************************************/
+
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"

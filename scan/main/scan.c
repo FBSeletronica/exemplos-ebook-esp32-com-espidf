@@ -1,15 +1,13 @@
-/* Scan Example
+/***************************************************************
+Example: Scan Example - based on Espressif Example
+Description: This example shows how to scan for available set of APs.
+Autor: Fábio Souza
 
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
+obs: This example is based on the example provided by Espressif.
 
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
+Use the menuconfig to configure the number of APs to scan for.
 
-/*
-    This example shows how to scan for available set of APs.
-*/
+****************************************************************/
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
@@ -18,13 +16,20 @@
 #include "esp_event.h"
 #include "nvs_flash.h"
 
-#define DEFAULT_SCAN_LIST_SIZE CONFIG_EXAMPLE_SCAN_LIST_SIZE
+#define DEFAULT_SCAN_LIST_SIZE CONFIG_EXAMPLE_SCAN_LIST_SIZE    // number of APs listed in scan list defined in menuconfig
 
-static const char *TAG = "scan";
+static const char *TAG = "scan";                // tag for ESP_LOGx macros
 
-static void print_auth_mode(int authmode)
+/*
+function to print authentication mode of AP
+argument:
+    authmode : authmode of AP
+return:
+    none
+*/
+static void print_auth_mode(int authmode)   
 {
-    switch (authmode) {
+    switch (authmode) {                             // switch case to print authmode of AP
     case WIFI_AUTH_OPEN:
         ESP_LOGI(TAG, "Authmode \tWIFI_AUTH_OPEN");
         break;
@@ -58,9 +63,17 @@ static void print_auth_mode(int authmode)
     }
 }
 
+/*
+Function to print cipher type of AP
+argument:
+    pairwise_cipher : pairwise cipher of AP
+    group_cipher : group cipher of AP
+return:
+    none
+*/
 static void print_cipher_type(int pairwise_cipher, int group_cipher)
 {
-    switch (pairwise_cipher) {
+    switch (pairwise_cipher) {                                      // switch case to print pairwise cipher of AP
     case WIFI_CIPHER_TYPE_NONE:
         ESP_LOGI(TAG, "Pairwise Cipher \tWIFI_CIPHER_TYPE_NONE");
         break;
@@ -96,7 +109,7 @@ static void print_cipher_type(int pairwise_cipher, int group_cipher)
         break;
     }
 
-    switch (group_cipher) {
+    switch (group_cipher) {                                     // switch case to print group cipher of AP
     case WIFI_CIPHER_TYPE_NONE:
         ESP_LOGI(TAG, "Group Cipher \tWIFI_CIPHER_TYPE_NONE");
         break;
@@ -130,49 +143,54 @@ static void print_cipher_type(int pairwise_cipher, int group_cipher)
     }
 }
 
-/* Initialize Wi-Fi as sta and set scan method */
+/*
+Function to scan for available APs
+argument:
+    none
+return:
+    none
+*/
 static void wifi_scan(void)
 {
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
-    assert(sta_netif);
+    ESP_ERROR_CHECK(esp_netif_init());                                  // Initialize TCP/IP network interface (esp-netif)
+    ESP_ERROR_CHECK(esp_event_loop_create_default());                   // Create default event loop
+    esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();       // Create default event loop
+    assert(sta_netif);                                                  // Check if the network interface was created
 
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();                // Initialize WiFi with default configuration
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));                               // Initialize WiFi            
 
-    uint16_t number = DEFAULT_SCAN_LIST_SIZE;
-    wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
-    uint16_t ap_count = 0;
-    memset(ap_info, 0, sizeof(ap_info));
+    uint16_t number = DEFAULT_SCAN_LIST_SIZE;                           // Number of APs to scan for
+    wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];                   // Array to store APs found during scan
+    uint16_t ap_count = 0;                                              // Number of APs found during scan
+    memset(ap_info, 0, sizeof(ap_info));                                // Clear array
 
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_start());
-    esp_wifi_scan_start(NULL, true);
-    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
-    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
-    ESP_LOGI(TAG, "Total APs scanned = %u", ap_count);
-    for (int i = 0; (i < DEFAULT_SCAN_LIST_SIZE) && (i < ap_count); i++) {
-        ESP_LOGI(TAG, "SSID \t\t%s", ap_info[i].ssid);
-        ESP_LOGI(TAG, "RSSI \t\t%d", ap_info[i].rssi);
-        print_auth_mode(ap_info[i].authmode);
-        if (ap_info[i].authmode != WIFI_AUTH_WEP) {
-            print_cipher_type(ap_info[i].pairwise_cipher, ap_info[i].group_cipher);
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));                  // Set WiFi mode to station
+    ESP_ERROR_CHECK(esp_wifi_start());                                  // Start WiFi
+    esp_wifi_scan_start(NULL, true);                                    // Start WiFi scan       
+    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));    // Get number of APs found during scan
+    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));               // Get APs found during scan
+    ESP_LOGI(TAG, "Total APs scanned = %u", ap_count);                  // Print number of APs found during scan
+    for (int i = 0; (i < DEFAULT_SCAN_LIST_SIZE) && (i < ap_count); i++) {          // Loop through APs found during scan
+        ESP_LOGI(TAG, "SSID \t\t%s", ap_info[i].ssid);                              // Print SSID of AP
+        ESP_LOGI(TAG, "RSSI \t\t%d", ap_info[i].rssi);                              // Print RSSI of AP
+        print_auth_mode(ap_info[i].authmode);                                       // Print authentication mode of AP
+        if (ap_info[i].authmode != WIFI_AUTH_WEP) {                                 // If AP is not using WEP encryption
+            print_cipher_type(ap_info[i].pairwise_cipher, ap_info[i].group_cipher); // Print cipher type of AP
         }
-        ESP_LOGI(TAG, "Channel \t\t%d\n", ap_info[i].primary);
+        ESP_LOGI(TAG, "Channel \t\t%d\n", ap_info[i].primary);                      // Print primary channel of AP
     }
-
 }
 
+// main function
 void app_main(void)
 {
-    // Initialize NVS
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
+    esp_err_t ret = nvs_flash_init();                                                   // Initialize NVS
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {     // If NVS was not initialized
+        ESP_ERROR_CHECK(nvs_flash_erase());                                             // Erase NVS
+        ret = nvs_flash_init();                                                         // Initialize NVS again
     }
-    ESP_ERROR_CHECK( ret );
+    ESP_ERROR_CHECK( ret );                                                             // Check if NVS was initialized        
 
-    wifi_scan();
+    wifi_scan();                                                                        // Scan for available APs
 }
